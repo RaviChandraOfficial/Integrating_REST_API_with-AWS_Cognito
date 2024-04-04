@@ -1,5 +1,5 @@
 use axum::{
-    body::Body, http::{self, Request, StatusCode}, middleware::Next, response::Response
+    body::Body, extract::Request, http::{self, StatusCode}, middleware::Next, response::Response
 };
 
 use jsonwebtokens_cognito::KeySet;
@@ -8,26 +8,34 @@ use serde_json::Value;
 use crate::model::CurrentUser;
 
 
-
+// headers 
 pub async fn mw_require_auth(
     mut request: Request<Body>,
     next: Next,
 ) -> Result<Response, StatusCode> {
+
+    println!("{:?}", request);
+    // let x = resp.body();
+    // println!("{:?}",x);
     let auth_header = request
         .headers()
         .get(http::header::AUTHORIZATION)
         .and_then(|header| header.to_str().ok());
 
+        println!("header checking swamy: {:?}",auth_header.unwrap());
+   
     let auth_header = if let Some(auth_header) = auth_header {
         auth_header
     } else {
         return Err(StatusCode::UNAUTHORIZED);
     };
 
+
     let user_pool_region = std::env::var("USER_POOL_REGION").unwrap();
     let user_pool_id = std::env::var("USER_POOL_ID").unwrap();
     let client_id = std::env::var("CLIENT_ID").unwrap();
 
+    println!("{:?}, {:?}, {:?}",user_pool_id,user_pool_region,client_id);
     let keyset = KeySet::new(user_pool_region, user_pool_id).unwrap();
     let verifier = keyset
         .new_access_token_verifier(&[&client_id])
@@ -41,6 +49,7 @@ pub async fn mw_require_auth(
                 if let Some(username_value) = obj.get("username") {
                     if let Value::String(username) = username_value {
                         // Now you have the username string
+                        println!("username decode avuthonda? {:?}",username_value);
                         request.extensions_mut().insert(CurrentUser{
                             username:username.to_string()
                         });

@@ -2,7 +2,7 @@
 use std::sync::Arc;
 
 use axum::{
-    http::{header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE}, HeaderValue, Method}, middleware::from_fn, routing::{delete, get, post, put}, Extension, Router
+    http::{self, header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE}, HeaderValue, Method, Response}, middleware::from_fn, routing::{delete, get, post, put}, Extension, Router
 };
 
 use my_rest_api::{auth, handler, middleware::mw_require_auth};
@@ -28,12 +28,6 @@ async fn main() {
     let shared_config = aws_config::load_from_env().await;
     let client = Client::new(&shared_config);
     
-
-
-
-
-
-        
     let cors = CorsLayer::new()
         .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
@@ -53,7 +47,7 @@ async fn main() {
     });
     println!("Connected to url:");
     // Create the Axum application with routes and middleware
-    let app = create_router( pool,client).layer(cors);
+    let app = create_router(pool,client).layer(cors);
     // Setup the web server routes and associate them with their respective handler functions.
 
 
@@ -66,25 +60,19 @@ async fn main() {
 
 
 
-
-pub fn create_router( pool:Pool<Postgres>,cli:Client) -> Router {
+pub fn create_router(pool:Pool<Postgres>,cli:Client) -> Router {
     let app = Router::new()
-    
+    .route("/get/user", get(handler::get_data))          // Route for fetching all users.    // Route for fetching a user by ID.
+    .route("/post/user", post(handler::post_data))       // Route for creating a new user.
+    .route("/put/user", put(handler::put_data))          // Route for updating an existing user.
+    .route("/delete/user", delete(handler::delete_data))
     .route("/signout", post(auth::sign_out_handler))
     .route_layer(from_fn(mw_require_auth))
     .route("/signup", post(auth::sign_up_handler))
     .route("/signup_confirm", post(auth::confirm_sign_up_handler))
     .route("/signin", post(auth::sign_in_handler))
-    
-    .route("/get/user", get(handler::get_data))          // Route for fetching all users.
-    .route("/get_id/user", get(handler::get_id_data))    // Route for fetching a user by ID.
-    .route("/post/user", post(handler::post_data))       // Route for creating a new user.
-    .route("/put/user", put(handler::put_data))          // Route for updating an existing user.
-    .route("/delete/user", delete(handler::delete_data)) // Route for deleting a user.
     .layer(Extension(cli))
-
-    .with_state(pool);                                            // Attach the database connection pool to the application state.
-    
+    .with_state(pool);                                           
     app
 }
 

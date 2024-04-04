@@ -1,5 +1,6 @@
-use crate::sensor::{Getid, NoteModel, NoteModelResponse, Query, Request};
-use axum::response::IntoResponse;
+use crate::{model::CurrentUser, sensor::{Getid, NoteModel, NoteModelResponse, Query, Request}};
+use aws_sdk_cognitoidentityprovider::{config::Layer, Client};
+use axum::{response::IntoResponse, Extension};
 use serde_json::json;
 
 use axum::{
@@ -44,13 +45,16 @@ fn type_of<T>(_: &T) -> &'static str {
 
 //  GET request to fetch all sensor data from the database.
 pub async fn get_data(
-    
+    Extension(current_user): Extension<CurrentUser>,
+    // Layer(cli):Layer<Client>,select * from sensor_list
     State(pool): State<PgPool>,// state: wrapper used for sharing the data  accross asynchronus tasks
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
      // Execute a query to select all records from the sensor_list table.
 
-    let notes = sqlx::query_as("SELECT * FROM sensor_list")
-    // .bind(x)
+     println!("username type checking bro: {:?}",type_of(&current_user.username));
+     println!("get data lo checking:{:?}", current_user.username);
+    let notes = sqlx::query_as("SELECT * FROM sensor_list  WHERE user_name = $1")
+        .bind(current_user.username)
         .fetch_all(&pool) // Fetches all records asynchronously.
         .await      // Waits for the database operation to complete.
         .map_err(|e| {                 // Error handling in case the database query fails.
@@ -80,79 +84,6 @@ pub async fn get_data(
 
 
 
-
-/// Retrieves a sensor record by its ID from the `sensor_list` table.
-///
-/// This asynchronous function takes an ID from a JSON request and queries the database for a sensor
-/// record with that ID. If found, it returns the sensor record; otherwise, it provides an appropriate
-/// error response.
-///
-/// 
-///
-/// * `State(pool)` - The database connection pool used to access the database asynchronously.
-/// * `Json(request)` - A JSON payload containing the `id` of the sensor record to be retrieved, deserialized into a `get_id` struct.
-///
-/// 
-///
-/// - A successful response with HTTP status code `200 OK` and the sensor record in JSON format if the record exists.
-/// - An error response with HTTP status code `404 Not Found` if no sensor record with the given ID exists.
-/// - An error response with HTTP status code `500 Internal Server Error` for any other errors encountered during database access.
-///
-/// 
-///
-/// The function can return an error in two cases:
-/// - If no sensor record with the provided ID exists in the database, indicating the client requested a nonexistent resource.
-/// - If there is a problem accessing the database, such as a connection issue, which prevents the query from executing successfully.
-
-
-
-
-// Handler for the GET request to fetch a specific sensor data entry by its ID.
-pub async fn get_id_data(
-     // Extracts the PostgreSQL connection pool from the application state.
-    State(pool): State<PgPool>, // state: wrapper used for sharing the data  accross asynchronus tasks
-    // Deserialize the incoming JSON request body into a `get_id` struct.
-    Json(request): Json<Getid>
-) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-     // Extract the ID from the request body.
-    let id =request.id;
-     // Execute a parameterized query to select a record from the sensor_list table by ID.
-    let query_result = sqlx::query_as("SELECT * FROM sensor_list WHERE id = $1")
-    .bind(id)// Bind the ID to the query to prevent SQL injection.
-    .fetch_one(&pool)// Fetches a single record asynchronously.
-    .await;                                     // Waits for the database operation to complete.
-
-    // Match the result of the query to handle different outcomes.
-    match query_result {
-        // If the query successfully finds a record, serialize it for the response.
-        Ok(note) => {
-            // Constructs a success response with the note data.
-            let note_response = serde_json::json!({"status": "success","data": serde_json::json!({
-                "note": filter_db_record(&note)     // Applies filtering to the database record.
-            })});
-             // Returns the serialized note data with a success status.
-            return Ok(Json(note_response));
-        }
-        // If no record is found for the given ID, return a not found error.
-        Err(sqlx::Error::RowNotFound) => {
-            // Constructs a fail response indicating the note was not found.
-            let error_response = serde_json::json!({
-                "status": "fail",
-                "message": format!("Note with ID: {} not found", id)
-            });
-            // Returns a 404 Not Found status with the error message.
-            return Err((StatusCode::NOT_FOUND, Json(error_response)));
-        }
-        // Handles other types of database errors.
-        Err(e) => {
-            // Constructs an error response with the error detail.
-            return Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(json!({"status": "error","message": format!("{:?}", e)})),
-            ));
-        }
-    };
-}
 
 
 
@@ -191,6 +122,7 @@ pub async fn get_id_data(
 // Handler for the POST request to insert a new sensor data entry into the database.
 #[axum::debug_handler]
 pub async fn post_data(
+    Extension(current_user): Extension<CurrentUser>,
      // Extracts the PostgreSQL connection pool from the application state.
     State(pool): State<PgPool>,// state: wrapper used for sharing the data  accross asynchronus tasks
     // Deserialize the incoming JSON request body into a `Request` struct.
@@ -198,18 +130,19 @@ pub async fn post_data(
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
     // Extract fields from the request body.
     let id: i32 = request.id;
-    let name = request.sensor_name;
     let data = request.data;
     let location = request.location;
+    let name = request.name;
     println!("{:?}, {:?}, ",id, type_of(&id));
     println!("{:?}, {:?} ", name, type_of(&name));
     // Execute an INSERT query to add a new record to the sensor_list table.
     let _query_result =
-        sqlx::query("INSERT INTO sensor_list (id,sensor_name,location, data) VALUES ($1, $2, $3, $4)")
+        sqlx::query("INSERT INTO sensor_list (id,name,location, data,user_name) VALUES ($1, $2, $3, $4, $5)")
             .bind(id)
             .bind(name.to_string())
             .bind(location.to_string())
             .bind(data.to_string())
+            .bind(current_user.username)
             .fetch_one(&pool)
             .await
             .map_err(|e| {
@@ -242,10 +175,10 @@ pub async fn post_data(
 fn filter_db_record(note: &NoteModel) -> NoteModelResponse {
     NoteModelResponse {
         id: note.id.to_owned(),
-        sensor_name: note.sensor_name.to_owned(),
+        user_name: note.user_name.to_owned(),
         location: note.location.to_owned(),
         data: note.data.to_owned(),
-
+        name:note.name.to_owned()
     }
 }
 
@@ -277,20 +210,22 @@ fn filter_db_record(note: &NoteModel) -> NoteModelResponse {
 
 
 pub async fn put_data(
+    Extension(current_user): Extension<CurrentUser>,
     State(pool): State<PgPool>,
     Json(request): Json<Request>
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
     let id = request.id;
-    let name = request.sensor_name;
+    let name = request.name;
     let data = request.data;
     let location = request.location;
 
 
-    let _update_result= sqlx::query("UPDATE sensor_list SET sensor_name=$2 , location=$3 , data=$4 WHERE id=$1")
+    let _update_result= sqlx::query("UPDATE sensor_list SET name=$2 , location=$3 , data=$4 WHERE id=$1 and user_name =$5")
         .bind(id.clone())
         .bind(name.to_string())
         .bind(location.to_string())
         .bind(data.to_string())
+        .bind(current_user.username)
         .execute(&pool)
         .await
         .map_err(|e| {
@@ -342,13 +277,15 @@ pub async fn put_data(
 /// - If the specified ID does not match any records in the database, resulting in a `404 Not Found` error.
 
 pub async fn delete_data(
+    Extension(current_user): Extension<CurrentUser>,
     State(pool): State<PgPool>,
     Json(request): Json<Query>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
     let id = request.id;
     // Execute an SQL DELETE operation to remove an entry from the `sensor_list` table
-    let query_result = sqlx::query("DELETE FROM sensor_list WHERE id = $1")
+    let query_result = sqlx::query("DELETE FROM sensor_list WHERE id = $1 and user_name =$2")
         .bind(id)
+        .bind(current_user.username)
         .execute(&pool)
         .await
         .map_err(|e| {

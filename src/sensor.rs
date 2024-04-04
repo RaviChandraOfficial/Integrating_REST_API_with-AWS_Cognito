@@ -4,9 +4,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize)]
 pub struct Request {
     pub id: i32,
-    pub sensor_name: String,
-    pub data: String,
+    pub name:String,
     pub location: String,
+    pub data: String
 }
 
 
@@ -22,9 +22,10 @@ pub struct Query {
 #[allow(non_snake_case)]
 pub struct NoteModel {
     pub id: i32,
-    pub sensor_name: String,
+    pub user_name: String,
     pub location :String,
     pub data :String,
+    pub name:String,
 }
 
 
@@ -32,9 +33,10 @@ pub struct NoteModel {
 #[allow(non_snake_case)]
 pub struct NoteModelResponse {
     pub id: i32,
-    pub sensor_name: String,
+    pub user_name: String,
     pub location: String,
-    pub data : String
+    pub data : String,
+    pub name:String
 }
 
 
@@ -48,6 +50,7 @@ pub struct Getid {
 
 #[derive(Serialize, Deserialize)]
 pub struct TokenInformation {
+    // pub cookie:String,
     pub id_token:String,
     pub access_token: String,
     pub refesh_token:String
@@ -60,9 +63,6 @@ pub struct Signin{
     pub username:String,
     pub password:String,
 }
-
-
-
 
 
 
