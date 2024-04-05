@@ -83,11 +83,6 @@ pub async fn sign_up_handler(
 
 
 
-
-
-
-
-
 pub async fn confirm_sign_up_handler(
     Extension(client): Extension<Client>,
     Json(body): Json<ConfirmSignUpBody>,
