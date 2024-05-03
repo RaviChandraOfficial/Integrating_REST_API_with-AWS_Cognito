@@ -73,9 +73,9 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "aws-config"
-version = "1.1.8"
+version = "1.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f4084d18094aec9f79d509f4cb6ccf6b613c5037e32f32e74312e52b836e366"
+checksum = "297b64446175a73987cedc3c438d79b2a654d0fff96f65ff530fbe039347644c"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
@@ -98,6 +98,7 @@ dependencies = [
  "time",
  "tokio",
  "tracing",
+ "url",
  "zeroize",
 ]
 
@@ -160,9 +161,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-sso"
-version = "1.17.0"
+version = "1.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5cc34f5925899739a3f125bd3f7d37d081234a3df218feb9c9d337fd4c70e72"
+checksum = "019a07902c43b03167ea5df0182f0cb63fae89f9a9682c44d18cf2e4a042cb34"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
@@ -182,9 +183,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-ssooidc"
-version = "1.17.0"
+version = "1.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7327cddd32b1a6f2aaeaadb1336b671a7975e96a999d3b1bcf5aa47932dc6ddb"
+checksum = "04c46ee08a48a7f4eaa4ad201dcc1dd537b49c50859d14d4510e00ad9d3f9af2"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
@@ -204,9 +205,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-sts"
-version = "1.17.0"
+version = "1.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c11981cdb80e8e205e22beb6630a8bdec380a1256bd29efaab34aaebd07cfb9"
+checksum = "f752ac730125ca6017f72f9db5ec1772c9ecc664f87aa7507a7d81b023c23713"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
@@ -250,9 +251,9 @@ dependencies = [
 
 [[package]]
 name = "aws-smithy-async"
-version = "1.1.8"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d26ea8fa03025b2face2b3038a63525a10891e3d8829901d502e5384a0d8cd46"
+checksum = "62220bc6e97f946ddd51b5f1361f78996e704677afc518a4ff66b7a72ea1378c"
 dependencies = [
  "futures-util",
  "pin-project-lite",
@@ -581,17 +582,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2459377285ad874054d797f3ccebf984978aa39129f6eafde5cdc8315b612f8"
 
 [[package]]
-name = "cookie"
-version = "0.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3cd91cf61412820176e137621345ee43b3f4423e589e7ae4e50d601d93e35ef8"
-dependencies = [
- "percent-encoding",
- "time",
- "version_check",
-]
-
-[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -849,17 +839,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a44623e20b9681a318efdd71c299b6b222ed6f231972bfe2f224ebad6311f0c1"
 
 [[package]]
-name = "futures-macro"
-version = "0.3.30"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87750cf4b7a4c0625b1529e4c543c2182106e4dedc60a2a6455e00d212c489ac"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.52",
-]
-
-[[package]]
 name = "futures-sink"
 version = "0.3.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -879,7 +858,6 @@ checksum = "3d6401deb83407ab3da39eba7e33987a73c3df0c82b4bb5813ee871c19c41d48"
 dependencies = [
  "futures-core",
  "futures-io",
- "futures-macro",
  "futures-sink",
  "futures-task",
  "memchr",
@@ -1346,7 +1324,6 @@ dependencies = [
 name = "my_rest_api"
 version = "0.1.0"
 dependencies = [
- "async-trait",
  "aws-config",
  "aws-sdk-cognitoidentityprovider",
  "axum",
@@ -1358,7 +1335,6 @@ dependencies = [
  "serde_json",
  "sqlx",
  "tokio",
- "tower-cookies",
  "tower-http",
 ]
 
@@ -2191,7 +2167,6 @@ dependencies = [
  "tokio-stream",
  "tracing",
  "url",
- "uuid",
  "webpki-roots",
 ]
 
@@ -2273,7 +2248,6 @@ dependencies = [
  "stringprep",
  "thiserror",
  "tracing",
- "uuid",
  "whoami",
 ]
 
@@ -2312,7 +2286,6 @@ dependencies = [
  "stringprep",
  "thiserror",
  "tracing",
- "uuid",
  "whoami",
 ]
 
@@ -2337,7 +2310,6 @@ dependencies = [
  "tracing",
  "url",
  "urlencoding",
- "uuid",
 ]
 
 [[package]]
@@ -2579,23 +2551,6 @@ dependencies = [
  "tower-layer",
  "tower-service",
  "tracing",
-]
-
-[[package]]
-name = "tower-cookies"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4fd0118512cf0b3768f7fcccf0bef1ae41d68f2b45edc1e77432b36c97c56c6d"
-dependencies = [
- "async-trait",
- "axum-core",
- "cookie",
- "futures-util",
- "http 1.1.0",
- "parking_lot",
- "pin-project-lite",
- "tower-layer",
- "tower-service",
 ]
 
 [[package]]

@@ -35,3 +35,37 @@ Logging and Monitoring: Use AWS CloudWatch or similar services to monitor applic
 Conclusion
 Integrating AWS authentication and authorization into an Axum-based Rust application with a PostgreSQL backend requires careful planning and implementation. This guide provides a high-level overview, but the specific details will depend on your application's requirements and AWS environment.
 
+
+
+
+    let pool_clone = pool.clone(); // Clone the pool for use in the background task
+    tokio::spawn(async move {
+        fetch_and_update_sensor_data(pool_clone).await;
+    });
+    
+
+
+    async fn fetch_and_update_sensor_data(pool: Pool<Postgres>) {
+    loop {
+        // Simulate fetching data from sensors
+        let sensor_data = fetch_sensor_data().await;
+
+        // Now update the database with the fetched sensor data
+        match sqlx::query!("INSERT INTO sensor_data (data) VALUES ($1)", sensor_data)
+            .execute(&pool)
+            .await {
+            Ok(_) => println!("Data updated successfully"),
+            Err(e) => eprintln!("Failed to update data: {}", e),
+        }
+
+        // Wait for some time before fetching new data again
+        tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
+    }
+}
+
+async fn fetch_sensor_data() -> String {
+    // Placeholder: Fetch data from a sensor
+    "sample data".to_string()
+}
+
+

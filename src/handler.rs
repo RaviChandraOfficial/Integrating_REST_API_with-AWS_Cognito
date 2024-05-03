@@ -1,5 +1,4 @@
-use crate::{model::CurrentUser, sensor::{Getid, NoteModel, NoteModelResponse, Query, Request}};
-use aws_sdk_cognitoidentityprovider::{config::Layer, Client};
+use crate::sensor::{CurrentUser, Deleteuser, NoteModel, NoteModelResponse, Request};
 use axum::{response::IntoResponse, Extension};
 use serde_json::json;
 
@@ -9,14 +8,6 @@ use axum::{
 };
 use sqlx::PgPool;
 use axum::extract::State;
-
-
-use std::any::type_name;
-
-
-fn type_of<T>(_: &T) -> &'static str {
-    type_name::<T>()
-}
 
 
 
@@ -46,14 +37,10 @@ fn type_of<T>(_: &T) -> &'static str {
 //  GET request to fetch all sensor data from the database.
 pub async fn get_data(
     Extension(current_user): Extension<CurrentUser>,
-    // Layer(cli):Layer<Client>,select * from sensor_list
+
     State(pool): State<PgPool>,// state: wrapper used for sharing the data  accross asynchronus tasks
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-     // Execute a query to select all records from the sensor_list table.
-
-     println!("username type checking bro: {:?}",type_of(&current_user.username));
-     println!("get data lo checking:{:?}", current_user.username);
-    let notes = sqlx::query_as("SELECT * FROM sensor_list  WHERE user_name = $1")
+        let notes = sqlx::query_as("SELECT * FROM sensor_list  WHERE user_name = $1")
         .bind(current_user.username)
         .fetch_all(&pool) // Fetches all records asynchronously.
         .await      // Waits for the database operation to complete.
@@ -80,7 +67,9 @@ pub async fn get_data(
     });
     // Returns the JSON response with a success status.
     Ok(Json(json_response))
-}
+    }
+
+
 
 
 
@@ -133,8 +122,7 @@ pub async fn post_data(
     let data = request.data;
     let location = request.location;
     let name = request.name;
-    println!("{:?}, {:?}, ",id, type_of(&id));
-    println!("{:?}, {:?} ", name, type_of(&name));
+
     // Execute an INSERT query to add a new record to the sensor_list table.
     let _query_result =
         sqlx::query("INSERT INTO sensor_list (id,name,location, data,user_name) VALUES ($1, $2, $3, $4, $5)")
@@ -279,7 +267,7 @@ pub async fn put_data(
 pub async fn delete_data(
     Extension(current_user): Extension<CurrentUser>,
     State(pool): State<PgPool>,
-    Json(request): Json<Query>,
+    Json(request): Json<Deleteuser>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
     let id = request.id;
     // Execute an SQL DELETE operation to remove an entry from the `sensor_list` table

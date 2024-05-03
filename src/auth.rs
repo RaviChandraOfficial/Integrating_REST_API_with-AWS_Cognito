@@ -1,33 +1,21 @@
+use aws_sdk_cognitoidentityprovider::{types::{builders::AttributeTypeBuilder, AuthFlowType}, Client};
+use axum::{http::{self, HeaderMap, StatusCode}, response::IntoResponse, Extension, Json};
 
-use aws_sdk_cognitoidentityprovider::{error::SdkError, types::{builders::AttributeTypeBuilder, AttributeType, AuthFlowType}, Client};
-use axum::{body::Body, http::{self, HeaderMap, Request, StatusCode}, middleware::Next, response::IntoResponse, Extension, Json};
-use serde_json::json;
-use tower_cookies::{cookie::CookieJar, Cookie};
-
-use crate::sensor::{ConfirmSignUpBody, SignInBody, SignOutBody, SignUpBody, TokenInformation};
+use crate::sensor::{ConfirmSignUpBody, SignInBody, SignUpBody, TokenInformation};
 
 use base64::{engine::general_purpose, Engine};
 use ring::hmac;
 use serde::{Serialize, Deserialize};
-
 
 #[derive(Serialize, Deserialize)]
 struct Response {
     message:String
 }
 
-
-
-#[derive(Serialize)]
-struct ApiResponse {
-    message: String,
-}
-
-
+//HMAC (Hash-based Message Authentication Code)
 fn generate_secret_hash(client_secret: &str, user_name: &str, client_id: &str) -> String {
     let key = hmac::Key::new(hmac::HMAC_SHA256, client_secret.as_bytes());
     let msg = [user_name.as_bytes(), client_id.as_bytes()].concat();
-
     let signature = hmac::sign(&key, &msg);
 
     let encoded_hash = general_purpose::STANDARD.encode(signature.as_ref());
@@ -36,7 +24,7 @@ fn generate_secret_hash(client_secret: &str, user_name: &str, client_id: &str) -
 }
 
 
-pub async fn sign_up_handler(
+pub async fn sign_up(
     Extension(client): Extension<Client>,
     Json(body): Json<SignUpBody>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
@@ -47,17 +35,17 @@ pub async fn sign_up_handler(
         &body.username,
         &client_id,
     );
-
-    let _user_pool_id = std::env::var("USER_POOL_ID").unwrap();
-    let user_attribute_email = AttributeTypeBuilder::default()
+    let user_email = AttributeTypeBuilder::default()
     .name("email").value(&body.email).build().unwrap();
 
-    let signup_fluent_builder = client
-        .sign_up().client_id(client_id).secret_hash(client_secret)
-        .username(&body.username).password(&body.password)
-        .user_attributes(user_attribute_email);
+    let signup = client
+        .sign_up().client_id(client_id)
+        .secret_hash(client_secret)
+        .username(&body.username)
+        .password(&body.password)
+        .user_attributes(user_email);
 
-    match signup_fluent_builder.send().await {
+    match signup.send().await {
         Ok(response) => {
             let success_response = if response.user_confirmed {
                 serde_json::json!({
@@ -83,7 +71,7 @@ pub async fn sign_up_handler(
 
 
 
-pub async fn confirm_sign_up_handler(
+pub async fn confirm_sign_up(
     Extension(client): Extension<Client>,
     Json(body): Json<ConfirmSignUpBody>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
@@ -100,12 +88,13 @@ pub async fn confirm_sign_up_handler(
         .client_id(client_id)
         .secret_hash(client_secret)
         .username(&body.username)
-        .confirmation_code(&body.confirmation_code)
+        .confirmation_code(&body.otp)
         .send()
         .await;
 
         match response {
             Ok(_) => {
+                
                 let success_response = serde_json::json!({
                     "status": "success","message": "User is confirmed and ready to use."
                 });
@@ -121,9 +110,8 @@ pub async fn confirm_sign_up_handler(
 }
 
 
-
  
-pub async fn sign_in_handler(
+pub async fn  sign_in(
     Extension(client): Extension<Client>,
     Json(body): Json<SignInBody>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
@@ -144,19 +132,9 @@ pub async fn sign_in_handler(
             .auth_parameters("SECRET_HASH", client_secret)
             .send()
             .await;
-// try to print the response.
     match response {
         Ok(value) => {
-            let mut jar = CookieJar::new();
-            jar.add(Cookie::new("id_token", value.authentication_result()
-            .unwrap()
-            .id_token()
-            .unwrap()
-            .to_string()));
-            jar.add(Cookie::new("access_token", value.authentication_result().unwrap().access_token().unwrap().to_string()));
-            jar.add(Cookie::new("refresh_token", value.authentication_result().unwrap().refresh_token().unwrap().to_string()));
             let response = TokenInformation {
-                // cookie: jar,
                 id_token:value
                 .authentication_result()
                 .unwrap()
@@ -165,10 +143,6 @@ pub async fn sign_in_handler(
                 .to_string(),
                 access_token: value.authentication_result().unwrap().access_token().unwrap().to_string(),
                 refesh_token:value.authentication_result().unwrap().refresh_token().unwrap().to_string(),
-
-
-
-                
             };
 
             
@@ -188,12 +162,43 @@ pub async fn sign_in_handler(
 
 
 
-pub async fn sign_out_handler(
+// pub async fn sign_out(
     
+//     Extension(client): Extension<Client>,
+//     headers: HeaderMap
+// ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+//     let auth_header = headers
+//         .get(http::header::AUTHORIZATION)
+//         .ok_or(StatusCode::BAD_REQUEST).unwrap()
+//         .to_str()
+//         .unwrap();
+
+//     let sign_out = client.global_sign_out()
+//     .access_token(auth_header).send().await;
+
+
+//     match sign_out{
+//         Ok(_) => {
+//             let success_response = serde_json::json!({
+//                 "status": "success","message": "User is logged out"
+//             });
+//             Ok((StatusCode::OK, Json(success_response)))
+//         },
+//         Err(error) => {
+//             let error_response = serde_json::json!({
+//                 "status": "error","message": format!("{}",error.to_string())
+//             });
+//             Err((StatusCode::OK, Json(error_response)))
+//         },
+//     }
+// }
+
+
+pub async fn sign_out(
     Extension(client): Extension<Client>,
-    // Json(body): Json<SignOutBody>,
-    headers: HeaderMap
+    headers: HeaderMap,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    
     let auth_header = headers
         .get(http::header::AUTHORIZATION)
         .ok_or(StatusCode::BAD_REQUEST).unwrap()
@@ -202,9 +207,10 @@ pub async fn sign_out_handler(
 
     let global_sign_out_builder = client.global_sign_out()
     .access_token(auth_header).send().await;
-
-
-    match global_sign_out_builder{
+   
+     
+     match global_sign_out_builder{
+        
         Ok(_) => {
             let success_response = serde_json::json!({
                 "status": "success","message": "User is logged out"
@@ -218,9 +224,7 @@ pub async fn sign_out_handler(
             Err((StatusCode::OK, Json(error_response)))
         },
     }
+    
 }
-
-
-
 
 

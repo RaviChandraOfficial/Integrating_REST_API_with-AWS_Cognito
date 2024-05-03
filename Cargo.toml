@@ -10,14 +10,13 @@ axum={ version = "0.7.4", features = ["macros","tracing"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.68"
 tokio = { version = "1.0", features = ["full"] }
-sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "any", "postgres","uuid"] }
-tower-http = { version = "0.5.2", features = ["cors"] }
-aws-config = "1.1.8"
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres"] }
+aws-config = { version = "1.1.9", features = ["behavior-version-latest"] }
 aws-sdk-cognitoidentityprovider = "1.20.0"
-async-trait = "0.1.78"
-tower-cookies = "0.10.0"
 dotenv = "0.15.0"
 jsonwebtokens-cognito = "0.1.1"
 base64 = "0.22.0"
 ring = "0.17.5"
+tower-http = {version="0.5.2",features=["cors"]}
+
 

@@ -13,7 +13,7 @@ pub struct Request {
 
 // define a struct for the query parameters
 #[derive(Deserialize)]
-pub struct Query {
+pub struct Deleteuser {
     pub id: i32,
 }
 
@@ -40,30 +40,12 @@ pub struct NoteModelResponse {
 }
 
 
-#[derive(Deserialize, Serialize)]
-pub struct Getid {
-    pub id:i32
-}
-
-
-
-
 #[derive(Serialize, Deserialize)]
 pub struct TokenInformation {
-    // pub cookie:String,
     pub id_token:String,
     pub access_token: String,
     pub refesh_token:String
 }
-
-
-
-
-pub struct Signin{
-    pub username:String,
-    pub password:String,
-}
-
 
 
 #[derive(Serialize, Deserialize)]
@@ -80,39 +62,16 @@ pub struct SignInBody {
 }
 
 
-#[derive(Serialize, Deserialize)]
-pub struct SignOutBody {
-    pub access_token: String
-}
-
-
-
-
-
-#[derive(Serialize, Deserialize)]
-pub struct RequestCreateUser {
-    pub username: String,
-    pub password: String,
-}
-
-
-
-
-
-#[derive(Clone)]
-pub struct TokenWrapper(pub String);
-
-
-
 
 #[derive(Deserialize)]
 pub struct ConfirmSignUpBody {
     pub username: String,
-    pub confirmation_code: String,
+    pub otp: String,
 }
 
 
-#[derive(Serialize)]
-pub struct ConfirmSignUpResponse {
-    pub message: String,
+
+#[derive(Debug,Clone)]
+pub struct CurrentUser{
+    pub username:String
 }
