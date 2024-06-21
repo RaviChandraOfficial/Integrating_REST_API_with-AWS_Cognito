@@ -27,8 +27,8 @@ async fn main() {
 
     // Configure CORS settings for the application
     let cors = CorsLayer::new()
-    // .allow_origin("http://54.152.41.103:8080".parse::<HeaderValue>().unwrap())
-    .allow_origin("http://localhost:8080".parse::<HeaderValue>().unwrap())
+    .allow_origin("http://54.152.41.103:8080".parse::<HeaderValue>().unwrap())
+    // .allow_origin("http://localhost:8080".parse::<HeaderValue>().unwrap())
     // .allow_origin(Any)
     .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
     .allow_credentials(true)
