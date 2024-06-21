@@ -21,22 +21,19 @@ pub struct Deleteuser {
 #[derive(Debug, Deserialize, Serialize, sqlx::FromRow)]
 #[allow(non_snake_case)]
 pub struct NoteModel {
-    pub id: i32,
-    pub user_name: String,
-    pub location :String,
-    pub data :String,
-    pub name:String,
+    // pub id: i32,
+    // pub user_name: String,
+    // pub location :String,
+    // pub data :String,
+    // pub name:String,
+    pub value:String,
 }
 
 
 #[derive(Debug, Deserialize, Serialize)]
 #[allow(non_snake_case)]
 pub struct NoteModelResponse {
-    pub id: i32,
-    pub user_name: String,
-    pub location: String,
-    pub data : String,
-    pub name:String
+    pub value :String,
 }
 
 

@@ -40,7 +40,7 @@ pub async fn get_data(
 
     State(pool): State<PgPool>,// state: wrapper used for sharing the data  accross asynchronus tasks
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-        let notes = sqlx::query_as("SELECT * FROM sensor_list  WHERE user_name = $1")
+        let notes = sqlx::query_as("SELECT * FROM sensor")
         .bind(current_user.username)
         .fetch_all(&pool) // Fetches all records asynchronously.
         .await      // Waits for the database operation to complete.
@@ -162,11 +162,12 @@ pub async fn post_data(
 
 fn filter_db_record(note: &NoteModel) -> NoteModelResponse {
     NoteModelResponse {
-        id: note.id.to_owned(),
-        user_name: note.user_name.to_owned(),
-        location: note.location.to_owned(),
-        data: note.data.to_owned(),
-        name:note.name.to_owned()
+        // id: note.id.to_owned(),
+        // user_name: note.user_name.to_owned(),
+        // location: note.location.to_owned(),
+        // data: note.data.to_owned(),
+        // name:note.name.to_owned()
+        value:note.value.to_owned(),
     }
 }
 

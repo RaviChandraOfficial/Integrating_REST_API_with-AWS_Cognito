@@ -27,8 +27,8 @@ async fn main() {
 
     // Configure CORS settings for the application
     let cors = CorsLayer::new()
-    .allow_origin("http://54.152.41.103:8080".parse::<HeaderValue>().unwrap())
-    // .allow_origin("http://localhost:8080".parse::<HeaderValue>().unwrap())
+    // .allow_origin("http://54.152.41.103:8080".parse::<HeaderValue>().unwrap())
+    .allow_origin("http://localhost:8080".parse::<HeaderValue>().unwrap())
     // .allow_origin(Any)
     .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
     .allow_credentials(true)
@@ -50,9 +50,9 @@ async fn main() {
 pub fn create_router(pool:Pool<Postgres>,client:Client) -> Router {
     let app = Router::new()
     .route("/get/user", get(handler::get_data))          // Route for fetching all users.    // Route for fetching a user by ID.
-    .route("/post/user", post(handler::post_data))       // Route for creating a new user.
-    .route("/put/user", put(handler::put_data))          // Route for updating an existing user.
-    .route("/delete/user", delete(handler::delete_data))
+    // .route("/post/user", post(handler::post_data))       // Route for creating a new user.
+    // .route("/put/user", put(handler::put_data))          // Route for updating an existing user.
+    // .route("/delete/user", delete(handler::delete_data))
     .route("/signout", post(auth::sign_out))
     .route_layer(from_fn(middle_ware_function))
     .route("/signup", post(auth::sign_up))
