@@ -1,21 +1,21 @@
 use serde::{Deserialize, Serialize};
 
-// define a struct for the request body
-#[derive(Deserialize)]
-pub struct Request {
-    pub id: i32,
-    pub name:String,
-    pub location: String,
-    pub data: String
-}
+// // define a struct for the request body
+// #[derive(Deserialize)]
+// pub struct Request {
+//     pub id: i32,
+//     pub name:String,
+//     pub location: String,
+//     pub data: String
+// }
 
 
 
-// define a struct for the query parameters
-#[derive(Deserialize)]
-pub struct Deleteuser {
-    pub id: i32,
-}
+// // define a struct for the query parameters
+// #[derive(Deserialize)]
+// pub struct Deleteuser {
+//     pub id: i32,
+// }
 
 
 #[derive(Debug, Deserialize, Serialize, sqlx::FromRow)]
@@ -25,7 +25,7 @@ pub struct NoteModel {
     // pub user_name: String,
     // pub location :String,
     // pub data :String,
-    // pub name:String,
+    pub sensor_id:i32,
     pub value:String,
 }
 
@@ -33,7 +33,9 @@ pub struct NoteModel {
 #[derive(Debug, Deserialize, Serialize)]
 #[allow(non_snake_case)]
 pub struct NoteModelResponse {
+    pub sensor_id:i32,
     pub value :String,
+
 }
 
 
